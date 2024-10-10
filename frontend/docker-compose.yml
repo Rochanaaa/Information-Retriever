@@ -1,0 +1,37 @@
+version: "3.8"
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.0
+    environment:
+      - discovery.type=single-node
+      - cluster.routing.allocation.disk.watermark.low=85%
+      - cluster.routing.allocation.disk.watermark.high=90%
+      - cluster.routing.allocation.disk.watermark.flood_stage=95%
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+
+  app:
+    build: .
+    depends_on:
+      - elasticsearch
+    ports:
+      - "8501:8501"
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    command: >
+      sh -c "
+        echo 'Waiting for Elasticsearch to start...';
+        while ! nc -z elasticsearch 9200; do
+          sleep 1;
+        done;
+        echo 'Elasticsearch started';
+        python elasticsearch/es_test.py && streamlit run interface.py
+      "
+
+volumes:
+  esdata:
+    driver: local

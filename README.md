@@ -1,1 +1,1 @@
-# Information-Retriever
+# SC4021-Information-Retrieval
